@@ -8,7 +8,9 @@
       "Bash(npx create-next-app@latest . --typescript --tailwind --eslint --app --src=no --import-alias \"@/*\" --turbopack --use-npm)",
       "Bash(npm install:*)",
       "Bash(npx shadcn@latest init -d --style default --base-color neutral)",
-      "Bash(npx shadcn@latest init -d)"
+      "Bash(npx shadcn@latest init -d)",
+      "Bash(npx shadcn@latest add input textarea dialog dropdown-menu scroll-area separator tabs tooltip badge avatar sheet label switch select slider card popover command sonner)",
+      "Bash(npx next:*)"
     ]
   }
 }

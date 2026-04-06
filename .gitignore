@@ -36,6 +36,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# council local config (API keys, conversations, uploads)
+.council/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
