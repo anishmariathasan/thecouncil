@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:help.openai.com)",
+      "WebFetch(domain:cookbook.openai.com)",
+      "WebFetch(domain:developers.openai.com)",
+      "WebFetch(domain:community.openai.com)",
+      "Bash(npx create-next-app@latest . --typescript --tailwind --eslint --app --src=no --import-alias \"@/*\" --turbopack --use-npm)",
+      "Bash(npm install:*)",
+      "Bash(npx shadcn@latest init -d --style default --base-color neutral)",
+      "Bash(npx shadcn@latest init -d)"
+    ]
+  }
+}
