@@ -13,7 +13,7 @@ A multi-agent research chat platform that runs entirely on localhost. Configure 
 - **Rich Rendering**: LaTeX equations (KaTeX), syntax-highlighted code, markdown tables.
 - **File Uploads**: Drag-and-drop support for Images, PDFs, and other multimodality files.
 - **Dark Mode**: System-aware theme with manual toggle.
-- **Local-Only Storage**: API keys and configuration safely stored locally in .council/ are never sent anywhere except directly to the respective provider APIs.
+- **Local-Only Storage**: API keys and configuration safely stored locally in `.council/` are never sent anywhere except directly to the respective provider APIs.
 
 ## Supported Models
 
@@ -33,7 +33,7 @@ A multi-agent research chat platform that runs entirely on localhost. Configure 
 
 ### Setup
 
-`ash
+```bash
 # Clone the repository
 git clone https://github.com/anishmariathasan/thecouncil.git
 cd thecouncil
@@ -43,13 +43,13 @@ npm install
 
 # Start the development server
 npm run dev
-`
+```
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ### First-time Configuration
 
-1. Navigate to **Settings** (bottom of sidebar or /settings).
+1. Navigate to **Settings** (bottom of sidebar or `/settings`).
 2. Add at least one API key (OpenAI, Anthropic, Google, or OpenRouter).
 3. Add agents using presets or your own custom configuration.
 4. Return to **Chat** and start a conversation.
@@ -72,7 +72,7 @@ The Council ships with 8 ready-made agent presets:
 
 ## Project Structure
 
-`
+```
 app/
   api/chat/         : Streaming chat API (orchestrator entry point)
   api/config/       : Configuration management API
@@ -88,17 +88,17 @@ lib/
   providers/        : Provider registry, factory, key tester
   storage/          : Local config store (.council/)
   types/            : TypeScript type definitions
-`
+```
 
 ## Scripts
 
-`ash
+```bash
 npm run dev       # Start development server
 npm run build     # Production build
 npm run start     # Start production server
 npm run test      # Run test suite
 npm run lint      # Run ESLint
-`
+```
 
 ## How It Works
 
@@ -116,12 +116,12 @@ Each agent responds in sequence. The first agent streams directly; subsequent ag
 
 ## Configuration
 
-Configuration is stored locally in .council/config.json (automatically created, gitignored). This includes your API keys, agent configurations, default mode, and orchestration settings like interjection depth/cooldowns.
+Configuration is stored locally in `.council/config.json` (automatically created, gitignored). This includes your API keys, agent configurations, default mode, and orchestration settings like interjection depth/cooldowns.
 
 ## Technology Stack
 
 - [Next.js 16](https://nextjs.org/) (App Router, Turbopack)
-- [Vercel AI SDK](https://sdk.vercel.ai/)
+- [Vercel AI SDK](https://sdk.vercel.ai/) (`ai`, `@ai-sdk/openai`, `@ai-sdk/anthropic`, `@ai-sdk/google`)
 - [shadcn/ui](https://ui.shadcn.com/) + Tailwind CSS
 - [KaTeX](https://katex.org/) for LaTeX rendering
 - [Vitest](https://vitest.dev/) for testing
