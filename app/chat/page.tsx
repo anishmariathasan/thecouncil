@@ -1,16 +1,20 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { Sidebar } from '@/components/sidebar/sidebar';
 import { ChatContainer } from '@/components/chat/chat-container';
+import { ChatSettings } from '@/components/chat/chat-settings';
 import type { AgentConfig } from '@/lib/types/agents';
 import type { ConversationMode, SessionConfig } from '@/lib/types/council';
 import type { CouncilConfig } from '@/lib/types/config';
 
-export default function ChatPage() {
+export default function NewChatPage() {
+  const router = useRouter();
   const [agents, setAgents] = useState<AgentConfig[]>([]);
   const [primaryAgentId, setPrimaryAgentId] = useState<string | null>(null);
   const [mode, setMode] = useState<ConversationMode>('council');
+  const [selectedAgentIds, setSelectedAgentIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchConfig = useCallback(async () => {
@@ -18,8 +22,10 @@ export default function ChatPage() {
       const res = await fetch('/api/config');
       const data = (await res.json()) as CouncilConfig;
       setAgents(data.agents ?? []);
-      setPrimaryAgentId(data.defaultPrimaryAgentId ?? data.agents?.[0]?.id ?? null);
+      const primary = data.defaultPrimaryAgentId ?? data.agents?.[0]?.id ?? null;
+      setPrimaryAgentId(primary);
       setMode(data.defaultMode ?? 'council');
+      setSelectedAgentIds((data.agents ?? []).map((a) => a.id));
     } catch {
       // Config may not exist yet
     } finally {
@@ -32,34 +38,47 @@ export default function ChatPage() {
   }, [fetchConfig]);
 
   const primaryAgent = agents.find((a) => a.id === primaryAgentId);
+  const activeAgentIds = selectedAgentIds.length > 0 ? selectedAgentIds : agents.map((a) => a.id);
 
   const sessionConfig: SessionConfig = {
     mode,
     primaryAgentId: primaryAgentId ?? '',
-    agentIds: agents.map((a) => a.id),
+    agentIds: activeAgentIds,
+  };
+
+  const handleConversationCreated = (id: string) => {
+    router.push(`/chat/${id}`);
   };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center w-full h-full">
-        <p className="text-muted-foreground">Loading...</p>
-      </div>
+      <>
+        <Sidebar />
+        <main className="flex-1 flex items-center justify-center">
+          <p className="text-muted-foreground">Loading...</p>
+        </main>
+      </>
     );
   }
 
   return (
     <>
-      <Sidebar
-        agents={agents}
-        primaryAgentId={primaryAgentId}
-        mode={mode}
-        onModeChange={setMode}
-        onPrimaryAgentChange={setPrimaryAgentId}
-      />
+      <Sidebar />
       <main className="flex-1 flex flex-col min-w-0">
+        <ChatSettings
+          agents={agents}
+          primaryAgentId={primaryAgentId}
+          selectedAgentIds={activeAgentIds}
+          mode={mode}
+          onModeChange={setMode}
+          onPrimaryAgentChange={setPrimaryAgentId}
+          onSelectedAgentIdsChange={setSelectedAgentIds}
+        />
         <ChatContainer
           sessionConfig={sessionConfig}
           primaryAgent={primaryAgent}
+          allAgents={agents}
+          onConversationCreated={handleConversationCreated}
         />
       </main>
     </>

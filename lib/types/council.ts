@@ -44,3 +44,24 @@ export interface InterjectionData {
   agentColour: string;
   content: string;
 }
+
+/** A persisted conversation with per-chat agent and mode configuration. */
+export interface Conversation {
+  id: string;
+  title: string;
+  mode: ConversationMode;
+  primaryAgentId: string;
+  agentIds: string[];
+  /** Serialised UIMessage[] from the AI SDK */
+  messages: unknown[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ConversationSummary {
+  id: string;
+  title: string;
+  mode: ConversationMode;
+  messageCount: number;
+  updatedAt: string;
+}
