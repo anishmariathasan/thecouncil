@@ -3,6 +3,8 @@
 import { useEffect, useRef } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { MessageBubble } from './message-bubble';
+import { InterjectionBlock } from './interjection-block';
+import { parseResponse } from '@/lib/orchestrator/parse-interjections';
 import type { UIMessage } from 'ai';
 import type { AgentConfig } from '@/lib/types/agents';
 
@@ -42,15 +44,37 @@ export function MessageList({ messages, primaryAgent, isStreaming }: MessageList
             .map((p) => p.text)
             .join('') ?? '';
 
+          if (message.role === 'assistant') {
+            const { primaryContent, interjections } = parseResponse(textContent);
+
+            return (
+              <div key={message.id}>
+                <MessageBubble
+                  role="assistant"
+                  content={primaryContent}
+                  agentName={primaryAgent?.name}
+                  agentAvatar={primaryAgent?.avatar}
+                  agentColour={primaryAgent?.colour}
+                  isStreaming={isLast && isStreaming && interjections.length === 0}
+                />
+                {interjections.map((interjection, i) => (
+                  <InterjectionBlock
+                    key={`${message.id}-interjection-${i}`}
+                    agentName={interjection.agentName}
+                    agentRole={interjection.agentRole}
+                    agentAvatar={interjection.agentAvatar}
+                    content={interjection.content}
+                  />
+                ))}
+              </div>
+            );
+          }
+
           return (
             <MessageBubble
               key={message.id}
-              role={message.role as 'user' | 'assistant'}
+              role="user"
               content={textContent}
-              agentName={message.role === 'assistant' ? primaryAgent?.name : undefined}
-              agentAvatar={message.role === 'assistant' ? primaryAgent?.avatar : undefined}
-              agentColour={message.role === 'assistant' ? primaryAgent?.colour : undefined}
-              isStreaming={isLast && isStreaming && message.role === 'assistant'}
             />
           );
         })}

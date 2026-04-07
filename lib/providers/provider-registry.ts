@@ -78,12 +78,12 @@ export const PROVIDERS: Record<string, ProviderDefinition> = {
         thinking: { type: 'level', values: ['low', 'medium', 'high'], default: 'high' },
       },
       {
-        id: 'gemini-3.1-flash-lite', name: 'Gemini 3.1 Flash Lite', tier: 'budget',
+        id: 'gemini-3.1-flash-lite-preview', name: 'Gemini 3.1 Flash Lite (Preview)', tier: 'budget',
         capabilities: ['vision', 'pdf', 'thinking'],
         thinking: { type: 'level', values: ['minimal', 'low', 'medium', 'high'], default: 'high' },
       },
       {
-        id: 'gemini-3-flash', name: 'Gemini 3 Flash', tier: 'efficient',
+        id: 'gemini-3-flash-preview', name: 'Gemini 3 Flash (Preview)', tier: 'efficient',
         capabilities: ['vision', 'pdf', 'thinking'],
         thinking: { type: 'level', values: ['minimal', 'low', 'medium', 'high'], default: 'high' },
       },

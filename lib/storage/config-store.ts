@@ -18,8 +18,20 @@ export async function readConfig(): Promise<CouncilConfig> {
   try {
     await ensureConfigDir();
     const data = await fs.readFile(CONFIG_PATH, 'utf-8');
-    const parsed = JSON.parse(data);
-    return { ...DEFAULT_CONFIG, ...parsed };
+    const parsed = JSON.parse(data) as Partial<CouncilConfig>;
+    return {
+      ...DEFAULT_CONFIG,
+      ...parsed,
+      apiKeys: {
+        ...DEFAULT_CONFIG.apiKeys,
+        ...(parsed.apiKeys ?? {}),
+      },
+      agents: parsed.agents ?? DEFAULT_CONFIG.agents,
+      orchestration: {
+        ...DEFAULT_CONFIG.orchestration,
+        ...(parsed.orchestration ?? {}),
+      },
+    };
   } catch {
     return { ...DEFAULT_CONFIG };
   }

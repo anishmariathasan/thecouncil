@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import type { AgentConfig } from '@/lib/types/agents';
 import type { ConversationMode } from '@/lib/types/council';
+import { ThemeToggle } from '@/components/theme-toggle';
 import { cn } from '@/lib/utils';
 
 interface SidebarProps {
@@ -103,8 +104,9 @@ export function Sidebar({
         </ScrollArea>
       </div>
 
-      <div className="mt-auto p-4">
-        <Separator className="mb-4" />
+      <div className="mt-auto p-4 space-y-2">
+        <Separator className="mb-2" />
+        <ThemeToggle />
         <Link href="/settings">
           <Button variant="outline" size="sm" className="w-full">
             Settings

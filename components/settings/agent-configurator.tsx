@@ -9,10 +9,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { PROVIDERS, getModels } from '@/lib/providers/provider-registry';
+import { PROVIDERS, getModels, getModel } from '@/lib/providers/provider-registry';
 import { AGENT_PRESETS } from '@/lib/agents/presets';
 import { nanoid } from 'nanoid';
-import type { AgentConfig } from '@/lib/types/agents';
+import type { AgentConfig, ThinkingConfig } from '@/lib/types/agents';
 import type { ProviderId } from '@/lib/types/config';
 
 const AGENT_COLOURS = [
@@ -35,12 +35,15 @@ export function AgentConfigurator({ agents, apiKeys, onAdd, onRemove }: AgentCon
   const [providerId, setProviderId] = useState<string>('');
   const [modelId, setModelId] = useState('');
   const [avatar, setAvatar] = useState('🤖');
+  const [thinkingValue, setThinkingValue] = useState('');
 
   const availableProviders = Object.entries(PROVIDERS).filter(
     ([id]) => apiKeys[id as ProviderId]
   );
 
   const models = providerId ? getModels(providerId) : [];
+  const selectedModel = providerId && modelId ? getModel(providerId, modelId) : undefined;
+  const thinkingCapability = selectedModel?.thinking ?? selectedModel?.reasoning;
 
   const handlePreset = (preset: typeof AGENT_PRESETS[number]) => {
     setName(preset.name);
@@ -53,6 +56,15 @@ export function AgentConfigurator({ agents, apiKeys, onAdd, onRemove }: AgentCon
     if (!name || !providerId || !modelId) return;
 
     const colour = AGENT_COLOURS[agents.length % AGENT_COLOURS.length];
+
+    let thinking: ThinkingConfig | undefined;
+    if (thinkingCapability && thinkingValue) {
+      thinking = {
+        type: thinkingCapability.type,
+        value: thinkingCapability.type === 'budget' ? Number(thinkingValue) : thinkingValue,
+      };
+    }
+
     const agent: AgentConfig = {
       id: nanoid(),
       name,
@@ -62,6 +74,7 @@ export function AgentConfigurator({ agents, apiKeys, onAdd, onRemove }: AgentCon
       modelId,
       colour,
       avatar,
+      ...(thinking ? { thinking } : {}),
     };
 
     await onAdd(agent);
@@ -72,6 +85,7 @@ export function AgentConfigurator({ agents, apiKeys, onAdd, onRemove }: AgentCon
     setProviderId('');
     setModelId('');
     setAvatar('🤖');
+    setThinkingValue('');
   };
 
   return (
@@ -79,10 +93,10 @@ export function AgentConfigurator({ agents, apiKeys, onAdd, onRemove }: AgentCon
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold">Agents ({agents.length})</h3>
         <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button size="sm" disabled={availableProviders.length === 0}>
-              Add Agent
-            </Button>
+          <DialogTrigger
+            render={<Button size="sm" disabled={availableProviders.length === 0} />}
+          >
+            Add Agent
           </DialogTrigger>
           <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
             <DialogHeader>
@@ -139,7 +153,7 @@ export function AgentConfigurator({ agents, apiKeys, onAdd, onRemove }: AgentCon
 
               <div>
                 <Label htmlFor="provider">Provider</Label>
-                <Select value={providerId} onValueChange={(v) => { setProviderId(v); setModelId(''); }}>
+                <Select value={providerId} onValueChange={(v) => { setProviderId(v ?? ''); setModelId(''); }}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select provider" />
                   </SelectTrigger>
@@ -156,7 +170,7 @@ export function AgentConfigurator({ agents, apiKeys, onAdd, onRemove }: AgentCon
               {providerId && models.length > 0 && (
                 <div>
                   <Label htmlFor="model">Model</Label>
-                  <Select value={modelId} onValueChange={setModelId}>
+                  <Select value={modelId} onValueChange={(v) => setModelId(v ?? '')}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select model" />
                     </SelectTrigger>
@@ -174,6 +188,46 @@ export function AgentConfigurator({ agents, apiKeys, onAdd, onRemove }: AgentCon
                       ))}
                     </SelectContent>
                   </Select>
+                </div>
+              )}
+
+              {thinkingCapability && thinkingCapability.type !== 'budget' && 'values' in thinkingCapability && (
+                <div>
+                  <Label>
+                    {thinkingCapability.type === 'effort' ? 'Reasoning Effort' : 'Thinking Level'}
+                  </Label>
+                  <Select
+                    value={thinkingValue || thinkingCapability.default}
+                    onValueChange={(v) => setThinkingValue(v ?? '')}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {thinkingCapability.values.map((v: string) => (
+                        <SelectItem key={v} value={v}>
+                          {v.charAt(0).toUpperCase() + v.slice(1)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              {thinkingCapability && thinkingCapability.type === 'budget' && (
+                <div>
+                  <Label>Thinking Budget (tokens)</Label>
+                  <Input
+                    type="number"
+                    value={thinkingValue || ''}
+                    onChange={(e) => setThinkingValue(e.target.value)}
+                    placeholder={`${thinkingCapability.min}–${thinkingCapability.max} (leave blank for default)`}
+                    min={thinkingCapability.min}
+                    max={thinkingCapability.max}
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Range: {thinkingCapability.min.toLocaleString()}–{thinkingCapability.max.toLocaleString()} tokens
+                  </p>
                 </div>
               )}
 

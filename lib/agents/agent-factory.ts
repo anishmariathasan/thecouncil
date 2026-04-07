@@ -6,6 +6,6 @@ export function createAgentModel(agent: AgentConfig, config: CouncilConfig) {
   return createModelInstance(agent, config);
 }
 
-export function getAgentProviderOptions(agent: AgentConfig): Record<string, unknown> {
+export function getAgentProviderOptions(agent: AgentConfig): Record<string, Record<string, unknown>> {
   return getThinkingParams(agent);
 }

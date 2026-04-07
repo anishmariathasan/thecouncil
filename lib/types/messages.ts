@@ -2,6 +2,12 @@ import type { UIMessage } from 'ai';
 import type { GateDecision, AgentStatus, InterjectionData, SessionConfig } from './council';
 
 export interface CouncilDataParts {
+  'council-status': {
+    phase: 'gate-check' | 'interjections' | 'round-robin' | 'done';
+    pendingAgents: number;
+    totalAgents: number;
+    message: string;
+  };
   'agent-status': AgentStatus;
   'gate-result': GateDecision;
   'interjection': InterjectionData;

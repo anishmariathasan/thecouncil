@@ -8,11 +8,21 @@ import { cn } from '@/lib/utils';
 
 interface MessageInputProps {
   onSend: (message: string, files?: FileList) => void;
+  onStop?: () => void;
+  isStreaming?: boolean;
+  statusText?: string;
   disabled?: boolean;
   placeholder?: string;
 }
 
-export function MessageInput({ onSend, disabled, placeholder }: MessageInputProps) {
+export function MessageInput({
+  onSend,
+  onStop,
+  isStreaming,
+  statusText,
+  disabled,
+  placeholder,
+}: MessageInputProps) {
   const [input, setInput] = useState('');
   const [files, setFiles] = useState<File[]>([]);
   const [isDragOver, setIsDragOver] = useState(false);
@@ -20,6 +30,8 @@ export function MessageInput({ onSend, disabled, placeholder }: MessageInputProp
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const handleSend = useCallback(() => {
+    if (isStreaming) return;
+
     const trimmed = input.trim();
     if (!trimmed && files.length === 0) return;
 
@@ -33,9 +45,11 @@ export function MessageInput({ onSend, disabled, placeholder }: MessageInputProp
 
     setInput('');
     setFiles([]);
-  }, [input, files, onSend]);
+  }, [input, files, isStreaming, onSend]);
 
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (isStreaming) return;
+
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSend();
@@ -123,7 +137,7 @@ export function MessageInput({ onSend, disabled, placeholder }: MessageInputProp
           size="icon"
           className="shrink-0 h-9 w-9"
           onClick={() => fileInputRef.current?.click()}
-          disabled={disabled}
+          disabled={disabled || isStreaming}
         >
           📎
         </Button>
@@ -133,20 +147,37 @@ export function MessageInput({ onSend, disabled, placeholder }: MessageInputProp
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder={placeholder ?? 'Type a message... (Enter to send, Shift+Enter for new line)'}
-          disabled={disabled}
+          disabled={disabled || isStreaming}
           className="min-h-[40px] max-h-[200px] resize-none border-0 focus-visible:ring-0 focus-visible:ring-offset-0 p-0"
           rows={1}
         />
-        <Button
-          type="button"
-          size="icon"
-          className="shrink-0 h-9 w-9"
-          onClick={handleSend}
-          disabled={disabled || (!input.trim() && files.length === 0)}
-        >
-          ↑
-        </Button>
+        {isStreaming ? (
+          <Button
+            type="button"
+            size="icon"
+            variant="destructive"
+            className="shrink-0 h-9 w-9"
+            onClick={onStop}
+          >
+            ■
+          </Button>
+        ) : (
+          <Button
+            type="button"
+            size="icon"
+            className="shrink-0 h-9 w-9"
+            onClick={handleSend}
+            disabled={disabled || (!input.trim() && files.length === 0)}
+          >
+            ↑
+          </Button>
+        )}
       </div>
+      {isStreaming && statusText && (
+        <div className="px-3 pb-3">
+          <p className="text-xs text-muted-foreground">{statusText}</p>
+        </div>
+      )}
       {isDragOver && (
         <div className="absolute inset-0 flex items-center justify-center bg-primary/5 rounded-2xl border-2 border-dashed border-primary pointer-events-none">
           <p className="text-sm font-medium text-primary">Drop files here</p>

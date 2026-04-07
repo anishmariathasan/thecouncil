@@ -5,6 +5,15 @@ import { createOpenRouter } from '@openrouter/ai-sdk-provider';
 import type { AgentConfig } from '@/lib/types/agents';
 import type { CouncilConfig } from '@/lib/types/config';
 
+const GOOGLE_MODEL_ALIASES: Record<string, string> = {
+  'gemini-3.1-flash-lite': 'gemini-3.1-flash-lite-preview',
+  'gemini-3-flash': 'gemini-3-flash-preview',
+};
+
+function normalizeGoogleModelId(modelId: string): string {
+  return GOOGLE_MODEL_ALIASES[modelId] ?? modelId;
+}
+
 export function createModelInstance(agent: AgentConfig, config: CouncilConfig) {
   const apiKey = config.apiKeys[agent.providerId];
   if (!apiKey) {
@@ -22,7 +31,7 @@ export function createModelInstance(agent: AgentConfig, config: CouncilConfig) {
     }
     case 'google': {
       const google = createGoogleGenerativeAI({ apiKey });
-      return google(agent.modelId);
+      return google(normalizeGoogleModelId(agent.modelId));
     }
     case 'openrouter': {
       const openrouter = createOpenRouter({ apiKey });
@@ -33,26 +42,33 @@ export function createModelInstance(agent: AgentConfig, config: CouncilConfig) {
   }
 }
 
-export function getThinkingParams(agent: AgentConfig): Record<string, unknown> {
+export function getThinkingParams(agent: AgentConfig): Record<string, Record<string, unknown>> {
   if (!agent.thinking) return {};
 
   switch (agent.thinking.type) {
     case 'adaptive':
+      // Anthropic: effort controls thinking depth
       return {
-        thinking: { type: 'adaptive' },
-        output_config: { effort: agent.thinking.value },
+        anthropic: { effort: agent.thinking.value as string },
       };
     case 'effort':
+      // OpenAI: reasoningEffort for o-series and GPT-5.x
       return {
-        reasoning: { effort: agent.thinking.value },
+        openai: { reasoningEffort: agent.thinking.value as string },
       };
     case 'level':
+      // Google Gemini 3.x: thinkingLevel
       return {
-        thinkingLevel: agent.thinking.value,
+        google: {
+          thinkingConfig: { thinkingLevel: agent.thinking.value as string },
+        },
       };
     case 'budget':
+      // Google Gemini 2.5: thinkingBudget
       return {
-        thinkingBudget: agent.thinking.value,
+        google: {
+          thinkingConfig: { thinkingBudget: agent.thinking.value as number },
+        },
       };
     default:
       return {};
