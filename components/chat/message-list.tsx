@@ -32,7 +32,7 @@ export function MessageList({ messages, primaryAgent, isStreaming }: MessageList
             width={1200}
             height={280}
             priority
-            className="h-auto w-full"
+            className="h-auto w-full dark:invert dark:mix-blend-screen"
           />
           <p className="text-muted-foreground">
             Start a conversation with your council of AI agents. Configure your agents and API keys in Settings.
