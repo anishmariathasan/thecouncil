@@ -133,13 +133,12 @@ function AttachmentItem({
   const meta = file.mediaType || getExtension(label).toUpperCase() || 'file';
 
   return (
-    <a
-      href={file.url}
-      target="_blank"
-      rel="noopener noreferrer"
+    <button
+      type="button"
+      onClick={() => openAttachment(file)}
       title={`Open ${label}`}
       className={cn(
-        'group flex min-w-0 items-center gap-2 rounded-lg border px-2.5 py-2 text-left text-xs transition-colors',
+        'group flex w-full min-w-0 items-center gap-2 rounded-lg border px-2.5 py-2 text-left text-xs transition-colors',
         isUser
           ? 'border-primary-foreground/20 bg-primary-foreground/10 text-primary-foreground hover:bg-primary-foreground/15'
           : 'border-border bg-background/70 hover:bg-background',
@@ -172,11 +171,55 @@ function AttachmentItem({
         </span>
       </span>
       <ExternalLink className="h-3.5 w-3.5 shrink-0 opacity-60 transition-opacity group-hover:opacity-100" />
-    </a>
+    </button>
   );
 }
 
 function getExtension(filename: string): string {
   const extension = filename.split('.').pop();
   return extension && extension !== filename ? extension : '';
+}
+
+function openAttachment(file: ChatFileAttachment) {
+  const objectUrl = file.url.startsWith('data:')
+    ? createObjectUrl(file.url, file.mediaType)
+    : undefined;
+  const openUrl = objectUrl ?? file.url;
+  const openedWindow = window.open(openUrl, '_blank');
+
+  if (!openedWindow) {
+    downloadAttachment(openUrl, file.filename ?? 'attachment');
+  } else {
+    openedWindow.opener = null;
+  }
+
+  if (objectUrl) {
+    window.setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
+  }
+}
+
+function createObjectUrl(dataUrl: string, fallbackMediaType: string) {
+  const commaIndex = dataUrl.indexOf(',');
+  const header = commaIndex >= 0 ? dataUrl.slice(0, commaIndex) : `data:${fallbackMediaType}`;
+  const body = commaIndex >= 0 ? dataUrl.slice(commaIndex + 1) : dataUrl;
+  const mediaType = header.match(/^data:([^;,]+)/)?.[1] || fallbackMediaType || 'application/octet-stream';
+  const isBase64 = header.includes(';base64');
+  const binary = isBase64 ? atob(body) : decodeURIComponent(body);
+  const bytes = new Uint8Array(binary.length);
+
+  for (let i = 0; i < binary.length; i += 1) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+
+  return URL.createObjectURL(new Blob([bytes], { type: mediaType }));
+}
+
+function downloadAttachment(url: string, filename: string) {
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  link.rel = 'noopener noreferrer';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
 }
