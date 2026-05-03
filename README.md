@@ -12,7 +12,7 @@ A multi-agent research chat platform that runs entirely on localhost. Configure 
 - **Per-Chat Configuration**: Each conversation has its own mode (Council/Round Robin), primary agent, and active agent selection.
 - **Multi-Provider Support**: OpenAI, Anthropic, Google, and OpenRouter (300+ models).
 - **Configurable Intelligence**: Set reasoning and thinking effort levels per model per provider.
-- **Rich Rendering**: LaTeX equations (KaTeX), syntax-highlighted code, markdown tables.
+- **Rich Rendering**: LaTeX equations (KaTeX), syntax-highlighted code, GitHub-flavored markdown tables.
 - **File Uploads**: Drag-and-drop support for Images, PDFs, and other multimodality files.
 - **Dark Mode**: System-aware theme with manual toggle.
 - **Local-Only Storage**: API keys, configuration, and conversation history safely stored locally in `.council/` — never sent anywhere except directly to the respective provider APIs.
@@ -21,10 +21,12 @@ A multi-agent research chat platform that runs entirely on localhost. Configure 
 
 | Provider | Models |
 |----------|--------|
-| OpenAI | GPT-5.4, GPT-5.4 Pro/Mini/Nano, o3, o3-pro, o4-mini, GPT-4.1, GPT-4o |
-| Anthropic | Claude Opus 4.6, Claude Sonnet 4.6, Claude Haiku 4.5 |
+| OpenAI | GPT-5.5, GPT-5.5 Pro, GPT-5.4, GPT-5.4 Pro/Mini/Nano, o3, o3-pro, o4-mini, GPT-4.1, GPT-4o |
+| Anthropic | Claude Opus 4.7, Claude Opus 4.6, Claude Sonnet 4.6, Claude Haiku 4.5 |
 | Google | Gemini 3.1 Pro, Gemini 3.1 Flash Lite, Gemini 3 Flash, Gemini 2.5 Pro/Flash |
 | OpenRouter | 300+ models (enter model ID directly) |
+
+Claude Opus 4.7 uses Anthropic adaptive thinking (`thinking: { type: "adaptive" }`) with effort levels (`low`, `medium`, `high`, `max`) instead of a fixed thinking token budget.
 
 ## Quick Start
 

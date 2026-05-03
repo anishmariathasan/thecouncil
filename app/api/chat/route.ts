@@ -9,6 +9,36 @@ import { readConfig } from '@/lib/storage/config-store';
 import { runCouncilMode, runRoundRobinMode } from '@/lib/orchestrator/council-orchestrator';
 import type { SessionConfig } from '@/lib/types/council';
 
+interface CouncilStatusData {
+  phase: 'gate-check' | 'interjections' | 'round-robin' | 'done';
+  pendingAgents: number;
+  totalAgents: number;
+  message: string;
+}
+
+function hasModelUsableContent(message: UIMessage): boolean {
+  const parts = message.parts ?? [];
+
+  return parts.some((part) => {
+    if (part.type === 'text') {
+      return part.text.trim().length > 0;
+    }
+
+    if (part.type === 'reasoning' || part.type === 'step-start') {
+      return false;
+    }
+
+    return true;
+  });
+}
+
+function sanitizeIncomingMessages(messages: UIMessage[]): UIMessage[] {
+  return messages.filter((message) => {
+    if (message.role !== 'assistant') return true;
+    return hasModelUsableContent(message);
+  });
+}
+
 function toUserFacingErrorMessage(error: unknown): string {
   const raw = error instanceof Error ? error.message : String(error ?? 'Unknown error');
   const firstLine = raw.split('\n').map((line) => line.trim()).find(Boolean) ?? 'Unknown error';
@@ -43,6 +73,21 @@ function writeAssistantError(writer: UIMessageStreamWriter, message: string): vo
   writer.write({ type: 'text-end', id });
 }
 
+function writeDoneStatus(writer: UIMessageStreamWriter): void {
+  const status: CouncilStatusData = {
+    phase: 'done',
+    pendingAgents: 0,
+    totalAgents: 0,
+    message: 'Response complete.',
+  };
+
+  writer.write({
+    type: 'data-council-status',
+    data: status,
+    transient: true,
+  });
+}
+
 export async function POST(request: Request) {
   const body = await request.json();
   const { messages, sessionConfig } = body as {
@@ -50,7 +95,8 @@ export async function POST(request: Request) {
     sessionConfig: SessionConfig;
   };
 
-  const modelMessages = await convertToModelMessages(messages);
+  const sanitizedMessages = sanitizeIncomingMessages(messages ?? []);
+  const modelMessages = await convertToModelMessages(sanitizedMessages);
   const config = await readConfig();
 
   const stream = createUIMessageStream({
@@ -71,6 +117,7 @@ export async function POST(request: Request) {
       } catch (error) {
         console.error('Council orchestrator error:', error);
         writeAssistantError(writer, toUserFacingErrorMessage(error));
+        writeDoneStatus(writer);
       }
     },
     onError: (error) => {

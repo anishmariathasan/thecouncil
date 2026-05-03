@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState, useRef, useCallback } from 'react';
 import { DefaultChatTransport, type UIMessage } from 'ai';
 import { useChat } from '@ai-sdk/react';
 import { toast } from 'sonner';
-import { useRouter } from 'next/navigation';
 import { MessageList } from './message-list';
 import { MessageInput } from './message-input';
 import type { AgentConfig } from '@/lib/types/agents';
@@ -40,12 +39,11 @@ interface ChatContainerProps {
 export function ChatContainer({
   sessionConfig,
   primaryAgent,
-  allAgents,
+  allAgents = [],
   conversationId,
   initialMessages,
   onConversationCreated,
 }: ChatContainerProps) {
-  const router = useRouter();
   const [councilStatusMessage, setCouncilStatusMessage] = useState('');
   const [isCouncilProcessing, setIsCouncilProcessing] = useState(false);
   const activeConversationId = useRef<string | undefined>(conversationId);
@@ -54,9 +52,8 @@ export function ChatContainer({
   const transport = useMemo(
     () => new DefaultChatTransport({
       api: '/api/chat',
-      body: { sessionConfig },
     }),
-    [sessionConfig],
+    [],
   );
 
   const { messages, status, sendMessage, stop, error, clearError } = useChat({
@@ -76,17 +73,23 @@ export function ChatContainer({
       setIsCouncilProcessing(true);
       setCouncilStatusMessage(part.data.message);
     },
+    onError: (err) => {
+      setIsCouncilProcessing(false);
+      setCouncilStatusMessage('');
+      toast.error(err.message || 'Chat request failed');
+    },
   });
 
   const isStreaming = status === 'streaming' || status === 'submitted' || isCouncilProcessing;
 
   // Save messages to conversation whenever streaming finishes
   const saveMessages = useCallback(async (msgs: UIMessage[]) => {
-    if (msgs.length === 0) return;
+    const messagesToSave = filterPersistableMessages(msgs);
+    if (messagesToSave.length === 0) return;
 
     if (!activeConversationId.current) {
       // Create a new conversation from the first message
-      const firstUserMsg = msgs.find((m) => m.role === 'user');
+      const firstUserMsg = messagesToSave.find((m) => m.role === 'user');
       const title = firstUserMsg
         ? extractTitle(
             firstUserMsg.parts
@@ -114,7 +117,7 @@ export function ChatContainer({
           await fetch(`/api/conversations/${conv.id}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ messages: msgs }),
+            body: JSON.stringify({ messages: messagesToSave }),
           });
           onConversationCreated?.(conv.id);
         }
@@ -127,7 +130,7 @@ export function ChatContainer({
         await fetch(`/api/conversations/${activeConversationId.current}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ messages: msgs }),
+          body: JSON.stringify({ messages: messagesToSave }),
         });
       } catch {
         // Silent failure
@@ -144,21 +147,7 @@ export function ChatContainer({
   }, [isStreaming, messages, saveMessages]);
 
   useEffect(() => {
-    if (!isStreaming) {
-      setCouncilStatusMessage('');
-    }
-  }, [isStreaming]);
-
-  useEffect(() => {
-    if (status === 'error') {
-      setIsCouncilProcessing(false);
-      setCouncilStatusMessage('');
-    }
-  }, [status]);
-
-  useEffect(() => {
     if (!error) return;
-    toast.error(error.message || 'Chat request failed');
     clearError();
   }, [error, clearError]);
 
@@ -167,7 +156,10 @@ export function ChatContainer({
     setIsCouncilProcessing(true);
     setCouncilStatusMessage('Generating primary response...');
     pendingSave.current = false; // Will be set to true when done event arrives
-    sendMessage({ text, ...(files && files.length > 0 ? { files } : {}) });
+    sendMessage(
+      { text, ...(files && files.length > 0 ? { files } : {}) },
+      { body: { sessionConfig } },
+    );
   };
 
   const handleStop = () => {
@@ -181,13 +173,14 @@ export function ChatContainer({
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden">
       <MessageList
         messages={messages}
         primaryAgent={primaryAgent}
+        allAgents={allAgents}
         isStreaming={isStreaming}
       />
-      <div className="border-t bg-background p-4">
+      <div className="shrink-0 border-t bg-background p-4">
         <div className="max-w-3xl mx-auto">
           <MessageInput
             onSend={handleSend}
@@ -212,4 +205,27 @@ function extractTitle(text: string): string {
   const cleaned = text.trim().replace(/\n+/g, ' ');
   if (cleaned.length <= 50) return cleaned;
   return cleaned.slice(0, 47) + '...';
+}
+
+function hasPersistableContent(message: UIMessage): boolean {
+  const parts = message.parts ?? [];
+
+  return parts.some((part) => {
+    if (part.type === 'text') {
+      return part.text.trim().length > 0;
+    }
+
+    if (part.type === 'reasoning' || part.type === 'step-start') {
+      return false;
+    }
+
+    return true;
+  });
+}
+
+function filterPersistableMessages(messages: UIMessage[]): UIMessage[] {
+  return messages.filter((message) => {
+    if (message.role !== 'assistant') return true;
+    return hasPersistableContent(message);
+  });
 }

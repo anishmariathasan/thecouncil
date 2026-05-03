@@ -14,10 +14,9 @@ import type { ConversationSummary } from '@/lib/types/council';
 
 interface SidebarProps {
   activeConversationId?: string;
-  onConversationCreated?: (id: string) => void;
 }
 
-export function Sidebar({ activeConversationId, onConversationCreated }: SidebarProps) {
+export function Sidebar({ activeConversationId }: SidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
   const [conversations, setConversations] = useState<ConversationSummary[]>([]);
@@ -143,25 +142,13 @@ export function Sidebar({ activeConversationId, onConversationCreated }: Sidebar
     }
   };
 
-  const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
-    if (diffDays === 0) return 'Today';
-    if (diffDays === 1) return 'Yesterday';
-    if (diffDays < 7) return `${diffDays}d ago`;
-    return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
-  };
-
   // Group conversations by date
   const grouped = groupConversations(conversations);
 
   return (
     <div
       className={cn(
-        'flex h-full flex-col border-r bg-muted/30 transition-[width] duration-200',
+        'flex h-full shrink-0 flex-col border-r bg-muted/30 transition-[width] duration-200',
         isCollapsed ? 'w-16' : 'w-64',
       )}
     >
@@ -190,22 +177,22 @@ export function Sidebar({ activeConversationId, onConversationCreated }: Sidebar
 
       <div className="px-3 pb-3">
         <Button
-          variant="outline"
+          variant="ghost"
           size="sm"
           className={cn(
-            'h-10',
+            'group h-10 rounded-lg border border-border/70 bg-background shadow-sm transition-colors hover:border-primary/30 hover:bg-primary/5 hover:text-foreground',
             isCollapsed
               ? 'w-10 justify-center px-0'
-              : 'justify-start gap-2.5 px-3 text-sm font-medium',
+              : 'w-full justify-start gap-2.5 px-3 text-sm font-medium',
           )}
           onClick={handleNewChat}
           aria-label="New chat"
           title="New chat"
         >
-          <span className="flex h-5 w-5 items-center justify-center rounded-md bg-primary/10 text-primary">
-            <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
+          <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-primary text-primary-foreground shadow-sm transition-transform group-hover:scale-105">
+            <Plus className="h-3.5 w-3.5" strokeWidth={2.4} />
           </span>
-          {!isCollapsed && <span>New Chat</span>}
+          {!isCollapsed && <span>New chat</span>}
         </Button>
       </div>
 
@@ -298,7 +285,7 @@ export function Sidebar({ activeConversationId, onConversationCreated }: Sidebar
                           <div className="min-w-0">
                             <p className="truncate text-xs font-medium">{conv.title}</p>
                             <p className="text-[10px] text-muted-foreground">
-                              {conv.messageCount} message{conv.messageCount !== 1 ? 's' : ''} · {conv.mode}
+                              {conv.messageCount} message{conv.messageCount !== 1 ? 's' : ''} / {conv.mode}
                             </p>
                           </div>
                         )}

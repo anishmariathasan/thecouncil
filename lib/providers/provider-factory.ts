@@ -47,9 +47,12 @@ export function getThinkingParams(agent: AgentConfig): Record<string, Record<str
 
   switch (agent.thinking.type) {
     case 'adaptive':
-      // Anthropic: effort controls thinking depth
+      // Anthropic Opus 4.7 adaptive thinking uses the adaptive mode plus effort.
       return {
-        anthropic: { effort: agent.thinking.value as string },
+        anthropic: {
+          thinking: { type: 'adaptive' },
+          effort: agent.thinking.value as string,
+        },
       };
     case 'effort':
       // OpenAI: reasoningEffort for o-series and GPT-5.x

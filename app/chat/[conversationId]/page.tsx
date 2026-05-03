@@ -94,7 +94,7 @@ export default function ConversationPage() {
     return (
       <>
         <Sidebar activeConversationId={conversationId} />
-        <main className="flex-1 flex items-center justify-center">
+        <main className="flex-1 flex min-h-0 min-w-0 items-center justify-center overflow-hidden">
           <p className="text-muted-foreground">Loading...</p>
         </main>
       </>
@@ -104,7 +104,7 @@ export default function ConversationPage() {
   return (
     <>
       <Sidebar activeConversationId={conversationId} />
-      <main className="flex-1 flex flex-col min-w-0">
+      <main className="flex-1 flex min-h-0 min-w-0 flex-col overflow-hidden">
         <ChatSettings
           agents={allAgents}
           primaryAgentId={primaryAgentId}

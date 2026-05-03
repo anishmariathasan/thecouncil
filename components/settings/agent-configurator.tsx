@@ -34,7 +34,7 @@ export function AgentConfigurator({ agents, apiKeys, onAdd, onRemove }: AgentCon
   const [systemPrompt, setSystemPrompt] = useState('');
   const [providerId, setProviderId] = useState<string>('');
   const [modelId, setModelId] = useState('');
-  const [avatar, setAvatar] = useState('🤖');
+  const [avatar, setAvatar] = useState('AI');
   const [thinkingValue, setThinkingValue] = useState('');
 
   const availableProviders = Object.entries(PROVIDERS).filter(
@@ -44,6 +44,11 @@ export function AgentConfigurator({ agents, apiKeys, onAdd, onRemove }: AgentCon
   const models = providerId ? getModels(providerId) : [];
   const selectedModel = providerId && modelId ? getModel(providerId, modelId) : undefined;
   const thinkingCapability = selectedModel?.thinking ?? selectedModel?.reasoning;
+  const thinkingLabel = thinkingCapability?.type === 'effort'
+    ? 'Reasoning Effort'
+    : thinkingCapability?.type === 'adaptive'
+      ? 'Adaptive Thinking'
+      : 'Thinking Level';
 
   const handlePreset = (preset: typeof AGENT_PRESETS[number]) => {
     setName(preset.name);
@@ -58,10 +63,12 @@ export function AgentConfigurator({ agents, apiKeys, onAdd, onRemove }: AgentCon
     const colour = AGENT_COLOURS[agents.length % AGENT_COLOURS.length];
 
     let thinking: ThinkingConfig | undefined;
-    if (thinkingCapability && thinkingValue) {
+    if (thinkingCapability) {
+      const effectiveThinkingValue = thinkingValue || thinkingCapability.default;
+
       thinking = {
         type: thinkingCapability.type,
-        value: thinkingCapability.type === 'budget' ? Number(thinkingValue) : thinkingValue,
+        value: thinkingCapability.type === 'budget' ? Number(effectiveThinkingValue) : effectiveThinkingValue,
       };
     }
 
@@ -84,7 +91,7 @@ export function AgentConfigurator({ agents, apiKeys, onAdd, onRemove }: AgentCon
     setSystemPrompt('');
     setProviderId('');
     setModelId('');
-    setAvatar('🤖');
+    setAvatar('AI');
     setThinkingValue('');
   };
 
@@ -153,7 +160,7 @@ export function AgentConfigurator({ agents, apiKeys, onAdd, onRemove }: AgentCon
 
               <div>
                 <Label htmlFor="provider">Provider</Label>
-                <Select value={providerId} onValueChange={(v) => { setProviderId(v ?? ''); setModelId(''); }}>
+                <Select value={providerId} onValueChange={(v) => { setProviderId(v ?? ''); setModelId(''); setThinkingValue(''); }}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select provider" />
                   </SelectTrigger>
@@ -170,7 +177,7 @@ export function AgentConfigurator({ agents, apiKeys, onAdd, onRemove }: AgentCon
               {providerId && models.length > 0 && (
                 <div>
                   <Label htmlFor="model">Model</Label>
-                  <Select value={modelId} onValueChange={(v) => setModelId(v ?? '')}>
+                  <Select value={modelId} onValueChange={(v) => { setModelId(v ?? ''); setThinkingValue(''); }}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select model" />
                     </SelectTrigger>
@@ -193,9 +200,7 @@ export function AgentConfigurator({ agents, apiKeys, onAdd, onRemove }: AgentCon
 
               {thinkingCapability && thinkingCapability.type !== 'budget' && 'values' in thinkingCapability && (
                 <div>
-                  <Label>
-                    {thinkingCapability.type === 'effort' ? 'Reasoning Effort' : 'Thinking Level'}
-                  </Label>
+                  <Label>{thinkingLabel}</Label>
                   <Select
                     value={thinkingValue || thinkingCapability.default}
                     onValueChange={(v) => setThinkingValue(v ?? '')}

@@ -1,6 +1,7 @@
 'use client';
 
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import rehypeHighlight from 'rehype-highlight';
@@ -12,14 +13,14 @@ interface MarkdownRendererProps {
 
 export function MarkdownRenderer({ content }: MarkdownRendererProps) {
   return (
-    <div className="prose prose-sm dark:prose-invert max-w-none break-words">
+    <div className="prose prose-sm dark:prose-invert min-w-0 max-w-none break-words">
       <ReactMarkdown
-        remarkPlugins={[remarkMath]}
+        remarkPlugins={[remarkGfm, remarkMath]}
         rehypePlugins={[rehypeKatex, rehypeHighlight]}
         components={{
           pre({ children, ...props }) {
             return (
-              <pre className="relative rounded-lg bg-muted p-4 overflow-x-auto" {...props}>
+              <pre className="relative max-w-full overflow-x-auto rounded-lg bg-muted p-4" {...props}>
                 {children}
               </pre>
             );
@@ -54,15 +55,45 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
           },
           table({ children, ...props }) {
             return (
-              <div className="overflow-x-auto">
-                <table className="w-full border-collapse" {...props}>
+              <div className="my-4 max-w-full overflow-x-auto rounded-lg border border-border bg-background">
+                <table className="w-full min-w-[520px] border-collapse text-sm" {...props}>
                   {children}
                 </table>
               </div>
             );
           },
+          thead({ children, ...props }) {
+            return (
+              <thead className="border-b border-border bg-muted/60" {...props}>
+                {children}
+              </thead>
+            );
+          },
+          tr({ children, ...props }) {
+            return (
+              <tr className="border-b border-border last:border-b-0" {...props}>
+                {children}
+              </tr>
+            );
+          },
+          th({ children, ...props }) {
+            return (
+              <th className="px-3 py-2 text-left align-top font-semibold text-foreground" {...props}>
+                {children}
+              </th>
+            );
+          },
+          td({ children, ...props }) {
+            return (
+              <td className="px-3 py-2 align-top text-foreground/90" {...props}>
+                {children}
+              </td>
+            );
+          },
         }}
-      />
+      >
+        {content}
+      </ReactMarkdown>
     </div>
   );
 }

@@ -33,9 +33,9 @@ describe('Provider Registry', () => {
   });
 
   it('should find a specific model by provider and id', () => {
-    const model = getModel('anthropic', 'claude-opus-4-6');
+    const model = getModel('anthropic', 'claude-opus-4-7');
     expect(model).toBeDefined();
-    expect(model!.name).toBe('Claude Opus 4.6');
+    expect(model!.name).toBe('Claude Opus 4.7');
     expect(model!.tier).toBe('flagship');
   });
 
@@ -56,15 +56,23 @@ describe('Provider Registry', () => {
   });
 
   it('should have thinking config for claude models', () => {
-    const opus = getModel('anthropic', 'claude-opus-4-6');
+    const opus = getModel('anthropic', 'claude-opus-4-7');
     expect(opus!.thinking).toBeDefined();
     expect(opus!.thinking!.type).toBe('adaptive');
+    expect(opus!.thinking).toMatchObject({
+      values: ['low', 'medium', 'high', 'max'],
+      default: 'high',
+    });
   });
 
   it('should have reasoning config for openai reasoning models', () => {
-    const o3 = getModel('openai', 'o3');
-    expect(o3!.reasoning).toBeDefined();
-    expect(o3!.reasoning!.type).toBe('effort');
+    const gpt55 = getModel('openai', 'gpt-5.5');
+    expect(gpt55!.reasoning).toBeDefined();
+    expect(gpt55!.reasoning!.type).toBe('effort');
+    expect(gpt55!.reasoning).toMatchObject({
+      values: ['low', 'medium', 'high', 'xhigh'],
+      default: 'medium',
+    });
   });
 
   it('should have thinking config for google models', () => {

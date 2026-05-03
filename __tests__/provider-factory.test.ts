@@ -22,7 +22,12 @@ describe('getThinkingParams', () => {
   it('should return anthropic effort params for adaptive type', () => {
     const agent = { ...baseAgent, thinking: { type: 'adaptive' as const, value: 'high' } };
     const params = getThinkingParams(agent);
-    expect(params).toEqual({ anthropic: { effort: 'high' } });
+    expect(params).toEqual({
+      anthropic: {
+        thinking: { type: 'adaptive' },
+        effort: 'high',
+      },
+    });
   });
 
   it('should return openai reasoning params for effort type', () => {

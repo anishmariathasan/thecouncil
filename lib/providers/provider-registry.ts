@@ -6,6 +6,16 @@ export const PROVIDERS: Record<string, ProviderDefinition> = {
     name: 'OpenAI',
     models: [
       {
+        id: 'gpt-5.5', name: 'GPT-5.5', tier: 'flagship', context: '1M',
+        capabilities: ['vision', 'pdf', 'reasoning'],
+        reasoning: { type: 'effort', values: ['low', 'medium', 'high', 'xhigh'], default: 'medium' },
+      },
+      {
+        id: 'gpt-5.5-pro', name: 'GPT-5.5 Pro', tier: 'flagship', context: '1M',
+        capabilities: ['vision', 'pdf', 'reasoning'],
+        reasoning: { type: 'effort', values: ['low', 'medium', 'high', 'xhigh'], default: 'high' },
+      },
+      {
         id: 'gpt-5.4', name: 'GPT-5.4', tier: 'flagship',
         capabilities: ['vision', 'pdf', 'reasoning'],
         reasoning: { type: 'effort', values: ['none', 'low', 'medium', 'high'], default: 'none' },
@@ -53,6 +63,11 @@ export const PROVIDERS: Record<string, ProviderDefinition> = {
   anthropic: {
     name: 'Anthropic',
     models: [
+      {
+        id: 'claude-opus-4-7', name: 'Claude Opus 4.7', tier: 'flagship', context: '1M',
+        capabilities: ['vision', 'pdf', 'thinking'],
+        thinking: { type: 'adaptive', values: ['low', 'medium', 'high', 'max'], default: 'high' },
+      },
       {
         id: 'claude-opus-4-6', name: 'Claude Opus 4.6', tier: 'flagship', context: '1M',
         capabilities: ['vision', 'pdf', 'thinking'],

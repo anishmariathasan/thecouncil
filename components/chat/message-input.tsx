@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useCallback, type KeyboardEvent, type DragEvent } from 'react';
+import { Paperclip, SendHorizontal, Square, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
@@ -94,9 +95,9 @@ export function MessageInput({
   return (
     <div
       className={cn(
-        'border rounded-2xl bg-background transition-colors',
+        'relative rounded-xl border bg-background shadow-sm transition-colors',
         isDragOver && 'border-primary bg-primary/5',
-        'focus-within:border-primary/50'
+        'focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/10',
       )}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
@@ -110,19 +111,22 @@ export function MessageInput({
               variant="secondary"
               className="gap-1 pr-1"
             >
-              <span className="text-xs truncate max-w-[150px]">{file.name}</span>
+              <span className="max-w-[150px] truncate text-xs">{file.name}</span>
               <span className="text-xs text-muted-foreground">({formatFileSize(file.size)})</span>
               <button
+                type="button"
                 onClick={() => removeFile(i)}
-                className="ml-1 hover:bg-destructive/20 rounded-full p-0.5 text-xs"
+                className="ml-1 rounded-full p-0.5 text-muted-foreground hover:bg-destructive/15 hover:text-destructive"
+                aria-label={`Remove ${file.name}`}
+                title={`Remove ${file.name}`}
               >
-                ✕
+                <X className="h-3 w-3" />
               </button>
             </Badge>
           ))}
         </div>
       )}
-      <div className="flex items-end gap-2 p-3">
+      <div className="flex items-center gap-2 p-3">
         <input
           ref={fileInputRef}
           type="file"
@@ -135,20 +139,22 @@ export function MessageInput({
           type="button"
           variant="ghost"
           size="icon"
-          className="shrink-0 h-9 w-9"
+          className="h-10 w-10 shrink-0"
           onClick={() => fileInputRef.current?.click()}
           disabled={disabled || isStreaming}
+          aria-label="Attach files"
+          title="Attach files"
         >
-          📎
+          <Paperclip className="h-4 w-4" />
         </Button>
         <Textarea
           ref={textareaRef}
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder={placeholder ?? 'Type a message... (Enter to send, Shift+Enter for new line)'}
+          placeholder={placeholder ?? 'Type a message...'}
           disabled={disabled || isStreaming}
-          className="min-h-[40px] max-h-[200px] resize-none border-0 focus-visible:ring-0 focus-visible:ring-offset-0 p-0"
+          className="min-h-[40px] max-h-[200px] resize-none border-0 px-0 py-2.5 leading-5 focus-visible:ring-0 focus-visible:ring-offset-0"
           rows={1}
         />
         {isStreaming ? (
@@ -156,20 +162,24 @@ export function MessageInput({
             type="button"
             size="icon"
             variant="destructive"
-            className="shrink-0 h-9 w-9"
+            className="h-10 w-10 shrink-0"
             onClick={onStop}
+            aria-label="Stop response"
+            title="Stop response"
           >
-            ■
+            <Square className="h-3.5 w-3.5 fill-current" />
           </Button>
         ) : (
           <Button
             type="button"
             size="icon"
-            className="shrink-0 h-9 w-9"
+            className="h-10 w-10 shrink-0"
             onClick={handleSend}
             disabled={disabled || (!input.trim() && files.length === 0)}
+            aria-label="Send message"
+            title="Send message"
           >
-            ↑
+            <SendHorizontal className="h-4 w-4" />
           </Button>
         )}
       </div>
@@ -179,7 +189,7 @@ export function MessageInput({
         </div>
       )}
       {isDragOver && (
-        <div className="absolute inset-0 flex items-center justify-center bg-primary/5 rounded-2xl border-2 border-dashed border-primary pointer-events-none">
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-xl border-2 border-dashed border-primary bg-primary/5">
           <p className="text-sm font-medium text-primary">Drop files here</p>
         </div>
       )}

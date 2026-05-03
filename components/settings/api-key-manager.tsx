@@ -16,26 +16,26 @@ interface ApiKeyManagerProps {
   onTest: (providerId: ProviderId, apiKey: string) => Promise<{ success: boolean; error?: string }>;
 }
 
-const PROVIDER_INFO: Record<string, { description: string; placeholder: string; icon: string }> = {
+const PROVIDER_INFO: Record<string, { description: string; placeholder: string; mark: string }> = {
   openai: {
     description: 'Access GPT-5.4, o3, o4-mini and more',
     placeholder: 'sk-...',
-    icon: '⚡',
+    mark: 'OA',
   },
   anthropic: {
     description: 'Access Claude Opus 4.6, Sonnet 4.6, Haiku 4.5',
     placeholder: 'sk-ant-...',
-    icon: '🔮',
+    mark: 'A',
   },
   google: {
     description: 'Access Gemini 3.1 Pro, Flash, and more',
     placeholder: 'AI...',
-    icon: '💎',
+    mark: 'G',
   },
   openrouter: {
     description: 'Access 300+ models via a single key',
     placeholder: 'sk-or-...',
-    icon: '🌐',
+    mark: 'OR',
   },
 };
 
@@ -64,29 +64,32 @@ export function ApiKeyManager({ apiKeys, onSave, onRemove, onTest }: ApiKeyManag
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {Object.entries(PROVIDERS).map(([id, provider]) => {
         const info = PROVIDER_INFO[id];
-        const hasKey = !!apiKeys[id as ProviderId] && !apiKeys[id as ProviderId]?.startsWith('•'.repeat(4));
         const maskedKey = apiKeys[id as ProviderId];
         const isEditing = editingKeys[id] !== undefined;
         const testResult = testResults[id];
 
         return (
-          <Card key={id}>
+          <Card key={id} className="rounded-lg">
             <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="text-xl">{info?.icon}</span>
-                  <CardTitle className="text-base">{provider.name}</CardTitle>
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex min-w-0 items-start gap-3">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-muted text-[10px] font-semibold text-muted-foreground ring-1 ring-border/70">
+                    {info?.mark}
+                  </span>
+                  <div className="min-w-0">
+                    <CardTitle className="text-base">{provider.name}</CardTitle>
+                    <CardDescription>{info?.description}</CardDescription>
+                  </div>
                 </div>
                 {maskedKey && (
-                  <Badge variant="secondary" className="text-xs">
+                  <Badge variant="secondary" className="shrink-0 text-xs">
                     Configured
                   </Badge>
                 )}
               </div>
-              <CardDescription>{info?.description}</CardDescription>
             </CardHeader>
             <CardContent>
               {isEditing || !maskedKey ? (
@@ -103,21 +106,21 @@ export function ApiKeyManager({ apiKeys, onSave, onRemove, onTest }: ApiKeyManag
                       }
                     />
                   </div>
-                  <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      onClick={() => handleTest(id as ProviderId)}
-                      disabled={!editingKeys[id]?.trim() || testingProvider === id}
-                      variant="outline"
-                    >
-                      {testingProvider === id ? 'Testing...' : 'Test Key'}
-                    </Button>
+                  <div className="flex flex-wrap gap-2">
                     <Button
                       size="sm"
                       onClick={() => handleSave(id as ProviderId)}
                       disabled={!editingKeys[id]?.trim()}
                     >
                       Save
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={() => handleTest(id as ProviderId)}
+                      disabled={!editingKeys[id]?.trim() || testingProvider === id}
+                      variant="outline"
+                    >
+                      {testingProvider === id ? 'Testing...' : 'Test key'}
                     </Button>
                     {maskedKey && (
                       <Button
@@ -137,14 +140,16 @@ export function ApiKeyManager({ apiKeys, onSave, onRemove, onTest }: ApiKeyManag
                   </div>
                   {testResult && (
                     <p className={`text-sm ${testResult.success ? 'text-green-600' : 'text-red-600'}`}>
-                      {testResult.success ? 'Key is valid!' : `Error: ${testResult.error}`}
+                      {testResult.success ? 'Key is valid.' : `Error: ${testResult.error}`}
                     </p>
                   )}
                 </div>
               ) : (
-                <div className="flex items-center justify-between">
-                  <code className="text-sm text-muted-foreground">{maskedKey}</code>
-                  <div className="flex gap-2">
+                <div className="flex items-center justify-between gap-3">
+                  <code className="min-w-0 truncate rounded-md bg-muted px-2 py-1 text-sm text-muted-foreground">
+                    {maskedKey}
+                  </code>
+                  <div className="flex shrink-0 gap-2">
                     <Button
                       size="sm"
                       variant="outline"
